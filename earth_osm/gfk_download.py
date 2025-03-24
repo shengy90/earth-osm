@@ -75,7 +75,7 @@ def download_sitemap(geom, pkg_data_dir, progress_bar=True):
 
 
 def download_pbf(url, update, data_dir, progress_bar=True):
-
+    logger.info(f"5.0 Downloading PBF file: {url, update, data_dir}")
     pbf_dir = os.path.join(data_dir, "pbf")
     pbf_fn = os.path.basename(url)
     pbf_fp = os.path.join(pbf_dir, pbf_fn)
@@ -98,7 +98,7 @@ def download_pbf(url, update, data_dir, progress_bar=True):
             os.remove(down_md5_fp)
             raise ValueError(f"File verification failed after retry for {pbf_fn}")
     else:
-        logger.info("Successfully verified")
+        logger.info(f"Successfully verified: {str(pbf_fn)}")
     return pbf_fp
 
 
