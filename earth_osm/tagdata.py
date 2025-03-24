@@ -11,7 +11,10 @@ logger.setLevel(logging.INFO)
 tag_data = get_tag_data()
 
 def get_feature_list(primary_name):
-    return list(tag_data[primary_name]['features'].keys())
+    logger.info(f"8.0 Getting feature list...")
+    feature_list = list(tag_data[primary_name]['features'].keys())
+    logger.info(f"8.1 Got feature list: {len(feature_list)}")
+    return feature_list
 
 def get_primary_list():
     return list(tag_data.keys())

@@ -41,20 +41,20 @@ def process_region(region, primary_name, feature_name, mp, update, data_dir, pro
     Returns:
         None
     """
-
+    logger.info(f"3.0 Processing region: {data_source, region, primary_name, feature_name, mp, update, data_dir, progress_bar}")
     if data_source == 'geofabrik':
         primary_dict, feature_dict = get_filtered_data(region, primary_name, feature_name, mp, update, data_dir, progress_bar=progress_bar)
     elif data_source == 'overpass':
         primary_dict, feature_dict = get_overpass_data(region, primary_name, feature_name, data_dir, progress_bar=progress_bar)
 
-    logger.info("3. Data fetched...")
+    logger.info("3.1 Data fetched...")
 
     primary_data = primary_dict['Data']
     feature_data = feature_dict['Data']
-    logger.info("3.1 Loading JSOn into pandas dataframe...")
+    logger.info("3.2 Loading JSOn into pandas dataframe...")
     df_node = pd.json_normalize(feature_data["Node"].values())
     df_way = pd.json_normalize(feature_data["Way"].values())
-    logger.info(f"3.2 Dataframe size: {len(df_node), len(df_way)}. Checking dataframes...")
+    logger.info(f"3.3 Dataframe size: {len(df_node), len(df_way)}. Checking dataframes...")
 
     if df_way.empty:
         logger.debug(f"df_way is empty for {region.short}, {primary_name}, {feature_name}")
@@ -86,7 +86,7 @@ def process_region(region, primary_name, feature_name, mp, update, data_dir, pro
     
     # concat ways and nodes
     df_feature = pd.concat([df_way, df_node], ignore_index=True)
-    logger.info(f"3.3 Feature dataframe: {len(df_feature)}")
+    logger.info(f"3.4 Feature dataframe: {len(df_feature)}")
 
     # remove columns that are all nan
     df_feature.dropna(axis=1, how="all", inplace=True)

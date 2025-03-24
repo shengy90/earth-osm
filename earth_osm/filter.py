@@ -7,7 +7,7 @@ __license__ = "MIT"
 This module filters the extracted OSM data.
 
 """
-
+import time
 import json
 import logging
 import os
@@ -20,7 +20,7 @@ from earth_osm.osmpbf import Node, Relation, Way
 from earth_osm import logger as base_logger
 
 logger=logging.getLogger("eo.filter")
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 
 
 def feature_filter(primary_data, filter_tuple = ('power', 'line')):
@@ -37,7 +37,7 @@ def feature_filter(primary_data, filter_tuple = ('power', 'line')):
 
 
 def run_feature_filter(primary_dict, feature_name):
-    logger.info("Running feature filter.....")
+    logger.info("4.5 Running feature filter.....")
     if feature_name[:4] == 'ALL_':
         logger.info('Using ALL wildcard, so feature filter is skipped')
         return primary_dict
@@ -60,19 +60,19 @@ def run_feature_filter(primary_dict, feature_name):
 
     return feature_dict
 
-def run_primary_filter(PBF_inputfile, primary_file, primary_name, multiprocess):
-    logger.info('New Pre-Filter Data')
-    logger.info('Load OSM data from '+ PBF_inputfile+'\n')
 
+def run_primary_filter(PBF_inputfile, primary_file, primary_name, feature_name, multiprocess):
+    logger.info('6.0 Running primary filter... New Pre-Filter Data')
     feature_list = get_feature_list(primary_name)
+    logger.info(f"6.1 Got feature list!: {primary_name, feature_list}")
     pre_filter = {
         Node: {primary_name: feature_list},
         Way: {primary_name: feature_list},
         Relation: {primary_name: feature_list},
     }
-
+    logger.info("6.2 Running filter_pbf...")
     primary_data = filter_pbf(PBF_inputfile, pre_filter, multiprocess)
-
+    logger.info("6.3 Ran filter_pbf successfully!")
     metadata = {
         'filter_date': str(datetime.now().isoformat()),
         'primary_feature': primary_name,
@@ -82,6 +82,7 @@ def run_primary_filter(PBF_inputfile, primary_file, primary_name, multiprocess):
         'Data': primary_data
     }
     # Save primary_dict
+    logger.info("6.4 Saving primary_dict....")
     with open(primary_file, "w", encoding="utf-8") as target:
         json.dump(
             primary_dict,
@@ -95,31 +96,44 @@ def run_primary_filter(PBF_inputfile, primary_file, primary_name, multiprocess):
 
 
 def get_filtered_data(region, primary_name, feature_name, mp, update, data_dir, progress_bar=True):
+    
+    logger.info(f"""4.0 Getting filtered data: 
+                \nRegion: {region},
+                \nprimary_name: {primary_name}, 
+                \nfeature_name: {feature_name},
+                \nmultiprocessing: {mp}, 
+                \nupdate: {update}, 
+                \ndata_dir: {data_dir}
+                """)
     geofabrik_pbf_url = region.urls['pbf']
+    logger.info(f"4.01 Downloading PBF files... {geofabrik_pbf_url, update, data_dir, progress_bar}")
     PBF_inputfile = download_pbf(geofabrik_pbf_url, update, data_dir, progress_bar=progress_bar)
+    logger.info("4.05 PBD File Downloaded")
     country_code = region.short
-
+    logger.info("4.1 PBF exists. Checking primary file")
     # ------- primary file -------
     primary_file_exists = False
     primary_file = os.path.join(data_dir, primary_name, f"{country_code}_{primary_name}.json"
     )
+
     if os.path.exists(primary_file):
-        logger.info("Load existing primary file")
+        logger.info("4.1 Load existing primary file")
         primary_file_exists = True
         with open(primary_file, encoding="utf-8") as f:
             primary_dict = json.load(f)
     else:
-        logger.info("Create primary file")
+        logger.info("4.2 Create primary file")
         os.makedirs(os.path.dirname(primary_file), exist_ok=True)
 
     # TODO: compare update time using metadata in primary_dict
     if not primary_file_exists or update is True:
-        logger.info(f"Primary file exist: {primary_file_exists}, Update: {update}")
-        primary_dict = run_primary_filter(PBF_inputfile, primary_file, primary_name, mp)
-
+        logger.info(f"4.25 Primary file exist: {primary_file_exists}, Update: {update}. Running primary filter...")
+        primary_dict = run_primary_filter(PBF_inputfile, primary_file, primary_name, feature_name, mp)
+    else:
+        logger.info("4.3 Primary file exists and update is False")
     # ------- feature file -------
+    logger.info(f"4.4 Running feature filter: {len(primary_dict['Data']['Node'])} Nodes, {len(primary_dict['Data']['Way'])} Ways, {len(primary_dict['Data']['Relation'])} Relations")
     feature_dict = run_feature_filter(primary_dict, feature_name)
-
     return primary_dict, feature_dict
 
 

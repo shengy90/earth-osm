@@ -9,7 +9,7 @@ This module extracts OSM data from PBF files.
 Modified from esy-osmfilter/pre_filter.py
 
 """
-
+import time
 import itertools
 import logging
 import multiprocessing as mp
@@ -87,7 +87,10 @@ def filter_pbf(filename, pre_filter, multiprocess=True):
     Returns:
         targetname: JSON-file
     """
-
+    logger.info(f"7.0 Filtering pbf filename: {filename}")
+    logger.info(f"7.1 Pre-filter: {pre_filter}")
+    logger.info(f"7.2 Multiprocess: {multiprocess}")
+    start_time = time.time()
     with mp.Pool(processes=1 if not multiprocess else mp.cpu_count() - 1 or 1) as pool:
         file_query = pool_file_query(filename, pool)    
         primary_entries = list(file_query(primary_entry_filter, pre_filter)) #list of named  tuples eg. Node(id,tags, lonlat)
@@ -130,5 +133,6 @@ def filter_pbf(filename, pre_filter, multiprocess=True):
         primary_data = {"Node": {}, "Way": {}, "Relation": {}}
         for entry in primary_entries:
             primary_data[type(entry).__name__][str(entry.id)] = dict(entry._asdict())
-    
+    end_time = time.time()
+    logger.info(f"7.3 Filtering completed in {end_time - start_time} seconds")
     return primary_data
