@@ -65,10 +65,14 @@ def run_primary_filter(PBF_inputfile, primary_file, primary_name, feature_name, 
     logger.info('6.0 Running primary filter... New Pre-Filter Data')
     feature_list = get_feature_list(primary_name)
     logger.info(f"6.1 Got feature list!: {primary_name, feature_list}")
+    if feature_name in feature_list:
+        sub_feature_list = [feature_name]
+    else:
+        raise ValueError(f"Invalid Feature: {feature_name} not in {feature_list}")
     pre_filter = {
-        Node: {primary_name: feature_list},
-        Way: {primary_name: feature_list},
-        Relation: {primary_name: feature_list},
+        Node: {primary_name: sub_feature_list},
+        Way: {primary_name: sub_feature_list},
+        Relation: {primary_name: sub_feature_list},
     }
     logger.info("6.2 Running filter_pbf...")
     primary_data = filter_pbf(PBF_inputfile, pre_filter, multiprocess)
