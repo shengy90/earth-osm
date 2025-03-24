@@ -82,8 +82,11 @@ def download_pbf(url, update, data_dir, progress_bar=True):
 
     # download file
     down_pbf_fp = download_file(url, pbf_dir, exists_ok=not update, progress_bar=progress_bar)
+    logger.info("Downloaded PBF file")
+
     down_md5_fp = download_file(url + ".md5", pbf_dir, exists_ok=not update, progress_bar=progress_bar)
-    
+    logger.info("Downloaded MD5 file")
+
     assert down_pbf_fp == pbf_fp
 
     if not verify_pbf(down_pbf_fp, down_md5_fp):
@@ -94,7 +97,8 @@ def download_pbf(url, update, data_dir, progress_bar=True):
             os.remove(down_pbf_fp)
             os.remove(down_md5_fp)
             raise ValueError(f"File verification failed after retry for {pbf_fn}")
-
+    else:
+        logger.info("Successfully verified")
     return pbf_fp
 
 

@@ -37,6 +37,7 @@ def get_list_slug(str_list):
         return file_slug
     
 def convert_pd_to_gdf(pd_df):
+    logger.info("XXX Convert PD to GDF")
     # check if pd_df has a lonlat column
     if not 'lonlat' in pd_df.columns:
         raise KeyError("pandas dataframe does not have a lonlat column")

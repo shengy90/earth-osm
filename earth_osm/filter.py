@@ -37,6 +37,7 @@ def feature_filter(primary_data, filter_tuple = ('power', 'line')):
 
 
 def run_feature_filter(primary_dict, feature_name):
+    logger.info("Running feature filter.....")
     if feature_name[:4] == 'ALL_':
         logger.info('Using ALL wildcard, so feature filter is skipped')
         return primary_dict
@@ -103,14 +104,17 @@ def get_filtered_data(region, primary_name, feature_name, mp, update, data_dir, 
     primary_file = os.path.join(data_dir, primary_name, f"{country_code}_{primary_name}.json"
     )
     if os.path.exists(primary_file):
+        logger.info("Load existing primary file")
         primary_file_exists = True
         with open(primary_file, encoding="utf-8") as f:
             primary_dict = json.load(f)
     else:
+        logger.info("Create primary file")
         os.makedirs(os.path.dirname(primary_file), exist_ok=True)
 
     # TODO: compare update time using metadata in primary_dict
     if not primary_file_exists or update is True:
+        logger.info(f"Primary file exist: {primary_file_exists}, Update: {update}")
         primary_dict = run_primary_filter(PBF_inputfile, primary_file, primary_name, mp)
 
     # ------- feature file -------

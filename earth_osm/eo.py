@@ -47,16 +47,20 @@ def process_region(region, primary_name, feature_name, mp, update, data_dir, pro
     elif data_source == 'overpass':
         primary_dict, feature_dict = get_overpass_data(region, primary_name, feature_name, data_dir, progress_bar=progress_bar)
 
+    logger.info("3. Data fetched...")
+
     primary_data = primary_dict['Data']
     feature_data = feature_dict['Data']
-
+    logger.info("3.1 Loading JSOn into pandas dataframe...")
     df_node = pd.json_normalize(feature_data["Node"].values())
     df_way = pd.json_normalize(feature_data["Way"].values())
+    logger.info(f"3.2 Dataframe size: {len(df_node), len(df_way)}. Checking dataframes...")
 
     if df_way.empty:
         logger.debug(f"df_way is empty for {region.short}, {primary_name}, {feature_name}")
         # for df_way, check if way or area
     else:
+        logger.info("Converting ways...")
         type_col = way_or_area(df_way)
         df_way.insert(1, "Type", type_col)
         logger.debug(df_way['Type'].value_counts(dropna=False))
@@ -73,6 +77,7 @@ def process_region(region, primary_name, feature_name, mp, update, data_dir, pro
     if df_node.empty:
         logger.debug(f"df_node is empty for {region.short}, {primary_name}, {feature_name}")
     else:
+        logger.info("Converting nodes...")
         # df node has lonlat as [lon, lat] it should be [(lon, lat)]
         df_node["lonlat"] = df_node["lonlat"].apply(lambda x: [tuple(x)])
         
@@ -81,6 +86,7 @@ def process_region(region, primary_name, feature_name, mp, update, data_dir, pro
     
     # concat ways and nodes
     df_feature = pd.concat([df_way, df_node], ignore_index=True)
+    logger.info(f"3.3 Feature dataframe: {len(df_feature)}")
 
     # remove columns that are all nan
     df_feature.dropna(axis=1, how="all", inplace=True)
@@ -157,6 +163,7 @@ def save_osm_data(
     returns:
         dict of dataframes
     """
+    logger.info("1. Saving OSM data...")
     region_tuple_list = [get_region_tuple(r) for r in region_list]
     region_short_list = [r.short for r in region_tuple_list]
 
@@ -184,6 +191,7 @@ def save_osm_data(
                     writer(df_feature)
     
     elif out_aggregate is False:
+        logger.info("2. Not aggregating.... processing region...")
         # no aggregation, one file per region per feature
         for region in region_tuple_list:
                 for feature_name in feature_list:
